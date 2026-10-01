@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <title>Dessin SVG dynamique</title>
+  <!-- voir https://greensock.com/docs/v3/Installation#installer -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+</head>
+<body>
+  <!-- dessin SVG créé et modifié par les scripts JS -->
+  <svg xmlns="http://www.w3.org/2000/svg"
+        width="100%" viewBox="0 0 200 200"
+        id="dessin">
+  </svg>
+
+  <!-- utilisation du mixin SVGelement -->
+  <script src="svgelement.js"></script>
+
+  <script>
+        // compléments à la librairie Math
+        Math.radians = (deg) => deg * Math.PI / 180
+        Math.degrees = (rad) => rad / Math.PI * 180
+        class Led {
+            constructor(parent, x, y, radius) {
+                this.led = parent.appendElement("circle", {
+                    // TODO coordonnées du centre
+                    cx: x, cy: y,
+                    r: radius - radius/16,
+                    fill: "gray",
+                    stroke: "black",
+                    'stroke-width': radius/8
+                })   
+            }
+            turnOn(timeline, duration=0.1, position=">") {
+                  timeline.to(this.led, {
+                  fill:"red",
+                  duration: duration
+                })
+            }
+            turnOff(timeline, duration=0.1, position=">") {
+                  timeline.to(this.led, {
+                  fill:"gray",
+                  duration: duration
+                }, position=position)
+            }
+        }
+
+       
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // dessin SVG
+            const svg = SVGelement.fromSelector("#dessin")
+            // dessiner une led
+            const led = new Led(svg, 50, 50, 16)
+            const TLled = gsap.timeline()
+            led.turnOn(TLled, 1.0)
+            led.turnOff(TLled, 1.0, ">+2")
+            TLled.to(led, {
+                state: 1.0, // 1.0 = pleinement allumée
+                duration: 1.0
+            })
+            TLled.to(led, {
+                state: 0.0, // 0.0 = totalement éteinte
+                duration: 0.5
+            }, ">+2")
+        });
+
+        /** Représente et dessine un ruban horizontal de leds dans un SVG */
+        class LedRibbon {
+            constructor(parent, { number, x, y, radius = 8}) {
+                const spacing = 0; 
+                // liste des leds créées par ce ruban
+                this.leds = []
+                for (let i = 0; i < number; i++) {
+                    const led = new Led(parent, x + (2 * radius + spacing)*i, y, radius)
+                    this.leds.push(led)
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const svg = SVGelement.fromSelector("#dessin")
+            const ribbon = new LedRibbon(svg, { number: 8, x: 8, y: 8, radius: 8})
+        });
+
+  </script>
+</body>
+</html>
